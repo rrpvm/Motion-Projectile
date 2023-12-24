@@ -4,36 +4,28 @@ class Platform : public sf::Drawable,ITrajectoryController  {
 
 public:
 	Platform(size_t w, size_t h) {
-		const float startX = w * offset_value;
-		const float startY = h * offset_value;
-		const float height = h - (h * offset_value * 2);
-		const float width = w - (w * offset_value * 2);
-		oX.setFillColor(sf::Color(255, 0, 0, 255));
-		oY.setFillColor(sf::Color(255, 0, 0, 255));
-		oX.setSize(sf::Vector2f(width, 1));
-		oY.setSize(sf::Vector2f(1, height));
-		oX.setPosition(sf::Vector2f(startX,startY + height));
-		oY.setPosition(sf::Vector2f(startX, startY));
-		mCenter = sf::Vector2f(startX, startY + height);
-		mThrowAngleCursor[0] = mCenter;
-		calcAngleCursor();
+		onResize(w, h);
 	}
+	void onResize(size_t w, size_t h);
+	void onChangeWorld(size_t newWidth, size_t newHeight);
 	void draw(sf::RenderTarget& target, sf::RenderStates states)const override;
-	float angleSpeedUnit() override;
+	void onMoveMap(const sf::Vector2f& offset);
 	void onMoveUp(float elapsedMs) override;
 	void onMoveDown(float elapsedMs) override;
 	sf::Vector2f& getCenter() { return mCenter; }
 	float angle = 90.0F;//start pos and 
+	float angleSpeedUnit() override;
 private:
-	void calcAngleCursor();
+	size_t width = 0u;
+	size_t height = 0u;
+	sf::Vector2f mLastOffset = sf::Vector2f(0,0);
 	sf::Vector2f mCenter;
-
-	const float cursorLength = 200.0;
-	const float offset_value = 0.25f;
-	sf::RectangleShape oX;
-	sf::RectangleShape oY;
+	void calcAngleCursor();
+	const float cursorLength = 616.0f;
+	sf::Vertex oX[2] = {};
+	sf::Vertex oY[2] = {};
 	sf::Vertex mThrowAngleCursor[2] = {
-		sf::Vertex(sf::Vector2f(0, 0)),
+		sf::Vertex(sf::Vector2f(0, 0),sf::Color(255,0,0,255)),
 		sf::Vertex(sf::Vector2f(0, 0))
 	};
 

@@ -2,30 +2,46 @@
 
 void BaseRigidBody::revalidate(float alpha, float impulse)
 {
+	mMaxX = INT_MIN;
+	mMaxY = INT_MIN;
 	this->init(mGravity, alpha, impulse);
 	this->mPlaytime = this->getFlightTime(alpha);
 	this->mPlayState = 0;
+
+	float dwOffset = this->mPlaytime / RENDER_STEPS;
+	
+	for (int step = 0; step <= RENDER_STEPS; step++) {
+		float flTime = dwOffset * step;
+		float y = getYPositionByTime(flTime);
+		float x = getXPositionByTime(flTime);
+		precalculated[step] =  sf::Vector2f(x,-y);
+		if (x > mMaxX)mMaxX = x;
+		if (y > mMaxY)mMaxY = y;
+	}
+}
+
+void BaseRigidBody::onResize(sf::Vector2f& mCenter)
+{
+	this->origin = mCenter;
 }
 
 void BaseRigidBody::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
-
-	const  auto mSteps = 24;
-
-	auto mStep = this->mPlaytime / mSteps;
+	const auto  workingRectSize = sf::Vector2f(origin.x, origin.y);
 	auto pos = sf::Vector2f(0, 0);
-	sf::Vertex vertex[mSteps + 1] = {
+	sf::Vertex vertex[RENDER_STEPS  + 1] = {
 		{this->origin + pos}
 	};
-	for (int step = 0; step <= mSteps; step++) {
-		float value = mStep * step;
-		float y = getYPositionByTime(value);
-		float x = getXPositionByTime(value);
-		pos.x = x;
-		pos.y = -y;
-		vertex[step] = { this->origin + pos };
+	int i = 0;
+	auto minX = workingRectSize.x > mMaxX ? mMaxX : workingRectSize.x;
+	auto minY = workingRectSize.y > mMaxY ? mMaxY : workingRectSize.y;
+	for (auto& pos : precalculated) {
+		vertex[i] = { this->origin + sf::Vector2f(pos.x, pos.y ) };
+	//	vertex[i] = { this->origin + sf::Vector2f(pos.x / mMaxX * minX, pos.y / mMaxY * minY) };
+		i++;
 	}
-	target.draw(vertex, mSteps + 1, sf::PrimitiveType::LineStrip, states);
+	target.draw(vertex, RENDER_STEPS + 1 , sf::PrimitiveType::LineStrip, states);
+	
 }
 
 void BaseRigidBody::play(float elapsedMs)
