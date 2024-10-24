@@ -1,32 +1,51 @@
 #include <SFML/Graphics.hpp>
-#include "ITrajectoryController.hpp"
-class Platform : public sf::Drawable,ITrajectoryController  {
+#include "KeyEventListener.hpp"
+#include "BaseGameObject.hpp"
+#include "IRegidBody.hpp"
+class Platform : public sf::Drawable,public KeyEventListener,BaseGameObject   {
 
 public:
 	Platform(size_t w, size_t h) {
+		if (!mFont.loadFromFile("arialmt.ttf")) {
+			throw std::exception("no font in folder");
+		}
 		onResize(w, h);
+
+	}
+	~Platform() {
+		delete[] axisX;
+		delete[] axisY;
+		delete[] mThrowAngleCursor;
+		for (auto body : entities) {
+			delete body;
+		}
+		entities.clear();
 	}
 	void onResize(size_t w, size_t h);
-	void onChangeWorld(size_t newWidth, size_t newHeight);
 	void draw(sf::RenderTarget& target, sf::RenderStates states)const override;
-	void onMoveMap(const sf::Vector2f& offset);
-	void onMoveUp(float elapsedMs) override;
-	void onMoveDown(float elapsedMs) override;
-	sf::Vector2f& getCenter() { return mCenter; }
-	float angle = 90.0F;//start pos and 
-	float angleSpeedUnit() override;
+	void spawnRigidBody(IRegidBody* body);
+
+	//BaseGameObject
+	virtual void update(float elapsedMs) override;
+	//KeyEventListener
+	virtual void onKeyChanged(BaseKeys key, KeyEventType eventType) override;
 private:
+	const float cursorLength = 616.0f;
+	float thrownAngle = 90.0F;//платформа задает
+	float thrownImpuplse = 100.0F;//platform sets
+	float platformGravity = 9.81F;//платформа задает
 	size_t width = 0u;
 	size_t height = 0u;
-	sf::Vector2f mLastOffset = sf::Vector2f(0,0);
-	sf::Vector2f mCenter;
+	sf::Vertex* mThrowAngleCursor;
+	sf::Vertex* axisX;
+	sf::Vertex* axisY;
+	sf::Font mFont;
+	std::vector<IRegidBody*>entities;
 	void calcAngleCursor();
-	const float cursorLength = 616.0f;
-	sf::Vertex oX[2] = {};
-	sf::Vertex oY[2] = {};
-	sf::Vertex mThrowAngleCursor[2] = {
-		sf::Vertex(sf::Vector2f(0, 0),sf::Color(255,0,0,255)),
-		sf::Vertex(sf::Vector2f(0, 0))
+	float getVelocityModule();
+	float angleSpeedUnit();
+	enum PlatformDirection {
+		UP, DOWN, NONE
 	};
-
+	PlatformDirection mDirection = PlatformDirection::NONE;
 };

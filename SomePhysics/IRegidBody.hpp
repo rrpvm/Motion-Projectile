@@ -1,9 +1,13 @@
+#pragma once
 #include <SFML/Graphics.hpp>
-class IRegidBody {
+class IRegidBody: public sf::Drawable {
 
 public:
-	void init(float gravity, float alpha, float impulse);
+	virtual void modulate(float thrownAngle, float throwImpulse, float thrownPlatformGravity) = 0;
+	void draw(sf::RenderTarget& target, sf::RenderStates states)const  = 0;
 protected:
+	 void init(float gravity, float angle, float impulse);
+
 	 float getFlightTime(float alpha);
 	 float getScalarSpeed(float impulse);
 
@@ -12,6 +16,8 @@ protected:
 
 	 float getYPositionByTime(float time) const;
 	 float getXPositionByTime(float time) const;
+
+	
 protected:
 	float mMass = 0.0f;//kg
 	float mSpeed = 0.0f;//m/s

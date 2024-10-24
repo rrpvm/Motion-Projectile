@@ -70,6 +70,10 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>D:\Visual Projects\SomePhysics\SFML-2.6.1-windows-vc17-64-bit\SFML-2.6.1\include\SFML;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>D:\Visual Projects\SomePhysics\SFML-2.6.1-windows-vc17-64-bit\SFML-2.6.1\include\SFML;$(ExternalIncludePath)</ExternalIncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -108,13 +112,13 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\funik\Downloads\SFML-2.6.1-windows-vc17-64-bit\SFML-2.6.1\include\SFML;C:\Users\funik\Downloads\SFML-2.6.1-windows-vc17-64-bit\SFML-2.6.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\funik\Downloads\SFML-2.6.1-windows-vc17-64-bit\SFML-2.6.1\include\SFML;D:\Visual Projects\SomePhysics\SFML-2.6.1-windows-vc17-64-bit\SFML-2.6.1\include;D:\Visual Projects\SomePhysics\SFML-2.6.1-windows-vc17-64-bit\SFML-2.6.1\include\SFML;C:\Users\funik\Downloads\SFML-2.6.1-windows-vc17-64-bit\SFML-2.6.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\funik\Downloads\SFML-2.6.1-windows-vc17-64-bit\SFML-2.6.1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\Visual Projects\SomePhysics\SFML-2.6.1-windows-vc17-64-bit\SFML-2.6.1\lib;C:\Users\funik\Downloads\SFML-2.6.1-windows-vc17-64-bit\SFML-2.6.1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -135,15 +139,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BaseApplicationKeyController.cpp" />
     <ClCompile Include="BaseRigidBody.cpp" />
     <ClCompile Include="IRegidBody.cpp" />
     <ClCompile Include="Platform.cpp" />
     <ClCompile Include="SomePhysics.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ApplicationKeyController.hpp" />
+    <ClInclude Include="BaseApplicationController.hpp" />
+    <ClInclude Include="BaseGameObject.hpp" />
     <ClInclude Include="BaseRigidBody.hpp" />
     <ClInclude Include="IRegidBody.hpp" />
-    <ClInclude Include="ITrajectoryController.hpp" />
+    <ClInclude Include="KeyEventListener.hpp" />
+    <ClInclude Include="KeyInfo.hpp" />
     <ClInclude Include="Platform.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

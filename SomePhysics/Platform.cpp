@@ -1,67 +1,98 @@
 #include "Platform.hpp"
 #define DEG_TO_RAD(x) x/180.0F*3.14159265353
-
+const sf::Vector2f emptyVector = sf::Vector2f(0, 0);
 void Platform::onResize(size_t w, size_t h)
 {
 	this->width = w;
 	this->height = h;
-	mCenter = sf::Vector2f(w/2.0f,h/2.0f);
-	oX[0] = sf::Vertex(sf::Vector2f(0,mCenter.y), sf::Color(0, 255, 0, 255));
-	oX[1] = sf::Vertex(sf::Vector2f(w,mCenter.y), sf::Color(0, 255, 0, 255));
-	oY[0] = sf::Vertex(sf::Vector2f(mCenter.x, -(int)h), sf::Color(0, 255, 0, 255));
-	oY[1] = sf::Vertex(sf::Vector2f(mCenter.x, h), sf::Color(0, 255, 0, 255));
-	mThrowAngleCursor[0] = sf::Vertex(mCenter, sf::Color(255,0,0,255));
+	
+	if (this->axisX != nullptr) {
+		delete[] axisX;
+	}
+	if (this->axisY != nullptr) {
+		delete[] axisY;
+	}
+	this->axisX = new sf::Vertex[2]{
+		sf::Vertex(sf::Vector2f(-(int)width / 2.f, 0.0f),  sf::Color(0, 255, 0, 255)),
+		sf::Vertex(sf::Vector2f(width / 2.f,0.0f),  sf::Color(0, 255, 0, 255)),
+	};
+	this->axisY = new sf::Vertex[2]{
+		sf::Vertex(sf::Vector2f(0.0f, -(int)h / 2.f),  sf::Color(0, 255, 0, 255)),
+		sf::Vertex(sf::Vector2f(0.0f, h / 2.f),  sf::Color(0, 255, 0, 255)),
+	};
 	calcAngleCursor();
 }
 
-void Platform::onChangeWorld(size_t newWidth, size_t newHeight)
-{
-	this->width = newWidth;
-	this->height = newHeight;
-	onMoveMap(mLastOffset);
-}
-
 void Platform::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-	target.draw(oX, sizeof oX / sizeof(sf::Vertex) , sf::PrimitiveType::Lines, states);
-	target.draw(oY, sizeof oY / sizeof(sf::Vertex) , sf::PrimitiveType::Lines, states);
-	target.draw(this->mThrowAngleCursor,2,sf::PrimitiveType::Lines,states);
-}
 
-void Platform::onMoveMap(const sf::Vector2f& offset)
+	target.draw(axisX, sizeof(sf::Vertex)*2 / sizeof(sf::Vertex), sf::PrimitiveType::Lines, states);
+	target.draw(axisY, sizeof(sf::Vertex)*2 / sizeof(sf::Vertex), sf::PrimitiveType::Lines, states);
+	target.draw(this->mThrowAngleCursor, 2, sf::PrimitiveType::Lines, states);
+	for (auto entity : entities) {
+		target.draw(*entity);
+	}
+	auto angleText = sf::Text(std::to_string(this->thrownAngle), mFont, 20u);
+	angleText.setPosition(mThrowAngleCursor[1].position);
+	target.draw(angleText);
+}
+void Platform::spawnRigidBody(IRegidBody* body)
 {
-	mLastOffset = offset;
-	oY[0] = sf::Vertex(sf::Vector2f(mCenter.x, offset.y - height), sf::Color(0, 255, 0, 255));
-	oY[1] = sf::Vertex(sf::Vector2f(mCenter.x,offset.y + height), sf::Color(0, 255, 0, 255));
-	oX[1] = sf::Vertex(sf::Vector2f(offset.x + width, mCenter.y), sf::Color(0, 255, 0, 255));
+	entities.push_back(body);
 }
-
 float Platform::angleSpeedUnit()
 {
 	return 15.0f;
 }
 
-void Platform::onMoveUp(float elapsedMs)
+void Platform::update(float elapsedMs)
 {
-	//ms to s;
-	angle = angle + (angleSpeedUnit() * elapsedMs / 1000.0);
-	if (angle > 90.0f) {
-		angle = 90.0F;
+	if (mDirection == PlatformDirection::NONE)return;
+	auto velocityModule = getVelocityModule();
+	thrownAngle = thrownAngle + (velocityModule * elapsedMs / 1000.0);
+	if (thrownAngle > 90.0f) {
+		thrownAngle = 90.0F;
+	}
+	else if (thrownAngle < 0.0F) {
+		thrownAngle = 0.0F;
 	}
 	calcAngleCursor();
+	for (const auto& entity : entities) {
+		entity->modulate(this->thrownAngle, this->thrownImpuplse, this->platformGravity);
+	}
 }
 
-void Platform::onMoveDown(float elapsedMs)
+void Platform::onKeyChanged(BaseKeys key, KeyEventType eventType)
 {
-	angle = angle - (angleSpeedUnit() * elapsedMs / 1000.0);
-	if (angle < 0.0f) {
-		angle = 0.0F;
+	if (key == BaseKeys::MOVE_UP && eventType == KeyEventType::PRESSED) {
+		this->mDirection = PlatformDirection::UP;
 	}
-	calcAngleCursor();
+	else if (key == BaseKeys::MOVE_DOWN && eventType == KeyEventType::PRESSED) {
+		this->mDirection = PlatformDirection::DOWN;
+	}
+	else {
+		this->mDirection = PlatformDirection::NONE;
+	}
 }
 
 void Platform::calcAngleCursor()
 {
-	auto resX = abs(this->cursorLength * cos(DEG_TO_RAD(angle)));
-	auto resY = this->cursorLength * sin(DEG_TO_RAD(angle));
-	this->mThrowAngleCursor[1] = sf::Vertex(this->mCenter + sf::Vector2f(resX, -resY), sf::Color(255,0,0,255));
+	auto resX = abs(this->cursorLength * cos(DEG_TO_RAD(thrownAngle)));
+	auto resY = this->cursorLength * sin(DEG_TO_RAD(thrownAngle));
+	if (this->mThrowAngleCursor != nullptr) {
+		delete[] mThrowAngleCursor;
+	}
+	static sf::Color fAngleCursorColor = sf::Color(255, 0, 0, 255);
+	this->mThrowAngleCursor = new sf::Vertex[2]{ sf::Vertex(emptyVector,fAngleCursorColor), sf::Vertex(sf::Vector2f(resX, -resY), fAngleCursorColor) };
+}
+float Platform::getVelocityModule()
+{
+	int multplier = 0;
+	if (mDirection == PlatformDirection::DOWN) {
+		multplier = -1;
+	}
+	else if (mDirection == PlatformDirection::UP) {
+		multplier = 1;
+	}
+	else multplier = 0;
+	return angleSpeedUnit() * multplier;
 }
