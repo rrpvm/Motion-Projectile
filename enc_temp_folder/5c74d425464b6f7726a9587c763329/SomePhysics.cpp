@@ -62,7 +62,7 @@ int main()
                     keyboardController->processKeyboard(&event.key, event.type == sf::Event::KeyPressed ? KeyEventType::PRESSED : KeyEventType::RELEASED);
                 }
                 catch (std::exception& e) {
-                    //...
+
                 }
             }
             else  if (event.type == sf::Event::MouseWheelScrolled) {
